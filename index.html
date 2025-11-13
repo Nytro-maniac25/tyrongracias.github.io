@@ -1,207 +1,404 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tyron Gracias — Product Designer</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Tyron Gracias — Interactive Portfolio</title>
 
-  <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800;900&family=Inter:wght@300;500&display=swap" rel="stylesheet">
 
-  <!-- Styles -->
-  <style>
-    :root {
-      --bg: #000;
-      --text: #fff;
-      --muted: #888;
-      --accent: #ffd700;
-    }
+<style>
+  :root{
+    --bg:#000;
+    --white:#fff;
+    --muted:#bdbdbd;
+    --royal:#1e40af; /* royal blue */
+    --gold:#ffd700;
+    --card:#0a0a0a;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--white);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+  a{color:inherit}
+  /* layered layout */
+  .hero-wrap{position:relative;min-height:100vh;overflow:hidden}
+  /* threejs canvas container */
+  #glcanvas{position:absolute;inset:0;z-index:0}
+  /* overlay content centered in hero */
+  .hero-content{
+    position:relative;z-index:2;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    min-height:100vh;padding:3rem 1.25rem;text-align:center;
+    pointer-events:none; /* allow mouse to reach canvas */
+  }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+  .badge{
+    pointer-events:auto;
+    font-family:Montserrat, sans-serif;
+    background:rgba(0,0,0,0.6);
+    border:3px solid var(--white);
+    padding:14px 30px;border-radius:6px;
+    display:inline-block;margin-bottom:24px;font-weight:800;color:var(--white);
+    text-shadow:0 1px 0 rgba(0,0,0,0.6);
+  }
+  .title{
+    font-weight:900;
+    letter-spacing:-2px;
+    font-size:calc(2.6rem + 2.3vw);
+    margin:8px 0;
+    pointer-events:auto;
+  }
+  .tagline{
+    margin-top:12px;color:var(--muted);
+    font-size:clamp(1rem,1.6vw,1.25rem);max-width:980px;
+  }
+  /* 8-bit avatar placeholder */
+  .avatar{
+    width:110px;height:110px;border-radius:12px;margin:28px 0;background:linear-gradient(180deg,#111,#222);
+    display:flex;align-items:center;justify-content:center;border:4px solid rgba(255,255,255,0.07);
+    pointer-events:auto;
+  }
+  .avatar img{width:96px;height:96px;image-rendering:pixelated}
 
-    html, body {
-      font-family: 'Inter', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      scroll-behavior: smooth;
-      overflow-x: hidden;
-    }
+  /* CTA row */
+  .cta-row{display:flex;gap:16px;margin-top:18px;pointer-events:auto}
+  .btn{
+    padding:12px 20px;border-radius:32px;border:3px solid var(--white);background:transparent;color:var(--white);
+    font-weight:800;font-family:Montserrat, sans-serif;text-decoration:none;
+  }
+  .btn.primary{background:linear-gradient(90deg,var(--royal),var(--gold));border-color:transparent;color:#000}
 
-    /* Hero Section */
-    header {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 0 1.5rem;
-    }
+  /* clouds transition */
+  .clouds{
+    position:relative;z-index:1;background:var(--card);border-top-left-radius:40px;border-top-right-radius:40px;
+    margin-top:-40px;padding:48px 8px;height:220px;overflow:hidden;
+  }
+  .clouds .layer{
+    position:absolute;inset:0;transform:translateZ(0);pointer-events:none;
+  }
+  .clouds .clouds-row{
+    position:absolute;left:0;top:20px;display:flex;gap:60px;align-items:center;
+    animation:cloudMove 28s linear infinite;
+  }
+  .cloud{
+    width:240px;height:110px;background:url('assets/clouds.png') center/contain no-repeat;
+    opacity:0.95;filter:contrast(120%);
+  }
+  @keyframes cloudMove{
+    0%{ transform:translateX(0)}
+    100%{ transform:translateX(-50%) }
+  }
 
-    h1 {
-      font-size: clamp(2.5rem, 6vw, 5rem);
-      font-weight: 900;
-      letter-spacing: -1px;
-      margin-bottom: 1rem;
-    }
+  /* Projects area */
+  main{background:#f5f5f5;color:#111;padding:80px 18px 140px}
+  .projects{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+  .project{
+    background:#fff;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.08);overflow:hidden;display:flex;flex-direction:column;
+    transform:translateY(30px);opacity:0;transition:all .6s cubic-bezier(.2,.9,.2,1);
+  }
+  .project.revealed{transform:none;opacity:1}
+  .project .mock{height:420px;background:#111 url('https://placehold.co/1200x420/111111/888888?text=Project+mock') center/cover no-repeat}
+  .project .meta{padding:22px 26px}
+  .project h3{margin:0 0 8px;font-size:1.5rem;color:#111}
+  .project p{margin:0;color:#444}
 
-    .tagline {
-      font-size: clamp(1.2rem, 3vw, 1.8rem);
-      color: var(--muted);
-      max-width: 700px;
-      line-height: 1.4;
-    }
+  /* footer CTA / fish background reuse section */
+  .final-cta{min-height:70vh;padding:80px 18px;position:relative;display:flex;align-items:center;justify-content:center;background:#000;color:#fff}
+  .final-box{max-width:1000px;text-align:center}
+  .final-box h2{font-weight:900;font-size:clamp(2rem,6vw,5rem);margin:0 0 18px}
+  .final-box .actions{display:flex;gap:18px;justify-content:center}
+  .smallnote{position:fixed;left:18px;bottom:18px;color:var(--muted);font-size:12px;z-index:5}
 
-    .tagline span {
-      color: var(--accent);
-      cursor: pointer;
-      position: relative;
-    }
-
-    .tagline span::after {
-      content: "";
-      position: absolute;
-      bottom: -4px;
-      left: 0;
-      width: 0%;
-      height: 2px;
-      background: var(--accent);
-      transition: width 0.3s ease;
-    }
-
-    .tagline span:hover::after {
-      width: 100%;
-    }
-
-    /* Projects Section */
-    section#projects {
-      padding: 6rem 1.5rem;
-      max-width: 1000px;
-      margin: 0 auto;
-    }
-
-    .project {
-      background: #0a0a0a;
-      border-radius: 16px;
-      overflow: hidden;
-      margin-bottom: 3rem;
-      opacity: 0;
-      transform: translateY(40px);
-      transition: all 0.6s ease-out;
-    }
-
-    .project.reveal {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .project img {
-      width: 100%;
-      height: 400px;
-      object-fit: cover;
-      background: #111;
-    }
-
-    .project-content {
-      padding: 2rem;
-    }
-
-    .project h3 {
-      font-size: 1.6rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-    }
-
-    .project p {
-      color: var(--muted);
-      font-size: 1rem;
-      line-height: 1.6;
-    }
-
-    /* Footer */
-    footer {
-      text-align: center;
-      padding: 3rem 1.5rem;
-      color: var(--muted);
-      font-size: 0.95rem;
-      border-top: 1px solid rgba(255,255,255,0.05);
-    }
-
-    footer a {
-      color: var(--accent);
-      text-decoration: none;
-    }
-
-    footer a:hover {
-      text-decoration: underline;
-    }
-  </style>
+  /* responsive */
+  @media (max-width:900px){
+    .project .mock{height:260px}
+    .title{font-size:42px}
+    .avatar{width:84px;height:84px}
+  }
+</style>
 </head>
 <body>
 
-  <header>
-    <h1>Tyron Gracias — Product Designer</h1>
-    <p class="tagline">
-      Turning ideas into <span id="scrollToProjects">experiences</span> that inspire action.
-    </p>
-  </header>
+<!-- HERO -->
+<section class="hero-wrap">
+  <!-- Three.js canvas -->
+  <canvas id="glcanvas"></canvas>
 
-  <section id="projects">
-    <div class="project">
-      <img src="https://placehold.co/1000x400/111111/888888?text=Project+1+Mock" alt="Project 1 mock image">
-      <div class="project-content">
+  <!-- Overlay content -->
+  <div class="hero-content" aria-hidden="false">
+    <div class="badge">OPEN TO WORK!</div>
+
+    <div class="title" style="color:var(--white);">
+      TYRON GRACIAS
+    </div>
+
+    <div class="tagline">Turning ideas into <strong style="color:var(--gold)">experiences</strong> that inspire action.</div>
+
+    <div class="avatar" title="Tyron — placeholder sprite">
+      <!-- placeholder 8-bit avatar; replace with your sprite: assets/avatar.png -->
+      <img src="https://placehold.co/96x96/ffffff/000000?text=8-bit" alt="avatar placeholder" />
+    </div>
+
+    <div class="cta-row">
+      <a class="btn primary" href="#projects">Start a project</a>
+      <a class="btn" href="mailto:tyrongracias@gmail.com">Say hi</a>
+    </div>
+  </div>
+
+  <!-- clouds transition (rounded white card feel) -->
+  <div class="clouds" id="clouds">
+    <div class="layer">
+      <div class="clouds-row" id="cloudsRow">
+        <!-- duplicate sequence to loop smoothly -->
+        <div class="cloud"></div>
+        <div class="cloud" style="width:180px;height:90px;background-size:contain"></div>
+        <div class="cloud"></div>
+        <div class="cloud" ></div>
+        <div class="cloud"></div>
+        <div class="cloud"></div>
+        <div class="cloud"></div>
+        <div class="cloud"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<main>
+  <div class="projects" id="projects">
+    <article class="project">
+      <div class="mock"></div>
+      <div class="meta">
         <h3>Aevum — Behavioral Productivity App</h3>
-        <p>A mobile-first platform helping users overcome digital addiction through financial commitment and habit tracking.</p>
+        <p>Mobile-first platform helping users overcome digital addiction through financial commitment and habit tracking.</p>
       </div>
-    </div>
+    </article>
 
-    <div class="project">
-      <img src="https://placehold.co/1000x400/111111/888888?text=Project+2+Mock" alt="Project 2 mock image">
-      <div class="project-content">
-        <h3>DivvyUp — Fractional Real Estate Platform</h3>
-        <p>Building a seamless investment experience with transparency, smart contracts, and an investor-friendly dashboard.</p>
+    <article class="project">
+      <div class="mock"></div>
+      <div class="meta">
+        <h3>DivvyUp — Fractional Real Estate</h3>
+        <p>Seamless investing interface with fractional ownership and a marketplace for resales.</p>
       </div>
-    </div>
+    </article>
 
-    <div class="project">
-      <img src="https://placehold.co/1000x400/111111/888888?text=Project+3+Mock" alt="Project 3 mock image">
-      <div class="project-content">
-        <h3>Dot Studio — Educational Marketing Studio</h3>
-        <p>Helping schools build strong brands through digital strategy, admissions design, and growth-focused storytelling.</p>
+    <article class="project">
+      <div class="mock"></div>
+      <div class="meta">
+        <h3>Dot Studio — Educational Marketing</h3>
+        <p>Brand and admissions-focused marketing system for schools and institutions.</p>
       </div>
+    </article>
+  </div>
+</main>
+
+<!-- Final CTA with fish dots reused -->
+<section class="final-cta" id="final">
+  <div class="final-box">
+    <h2>LET'S BUILD TOGETHER</h2>
+    <div class="actions">
+      <a class="btn primary" href="mailto:tyrongracias@gmail.com">Start a project</a>
+      <a class="btn" href="#projects">See work</a>
     </div>
-  </section>
+  </div>
+</section>
 
-  <footer>
-    <p>© 2025 Tyron Gracias</p>
-    <p>
-      <a href="mailto:tyrongracias@gmail.com">tyrongracias@gmail.com</a> • 
-      <a href="https://www.linkedin.com/in/tyron-gracias-a99aa6149/" target="_blank">LinkedIn</a>
-    </p>
-  </footer>
+<div class="smallnote">© 2025 Tyron Gracias • <a href="https://www.linkedin.com/in/tyron-gracias-a99aa6149/" target="_blank">LinkedIn</a></div>
 
-  <!-- ScrollReveal Animations -->
-  <script>
-    const projects = document.querySelectorAll('.project');
+<!-- SCRIPTS: Three.js + app logic -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
 
-    function revealOnScroll() {
-      const trigger = window.innerHeight * 0.9;
-      projects.forEach(project => {
-        const top = project.getBoundingClientRect().top;
-        if (top < trigger) {
-          project.classList.add('reveal');
-        }
-      });
-    }
+<script>
+/*
+  Hero video-to-dot shader using Three.js
+  - Place a video file at assets/hero.mp4
+  - This shader samples the video texture, converts to a dot matrix
+  - Mouse moves create a subtle parallax displacement
+  - Mobile fallback: show the first frame / static background
+*/
 
-    window.addEventListener('scroll', revealOnScroll);
-    window.addEventListener('load', revealOnScroll);
+(async function(){
+  // DOM
+  const canvas = document.getElementById('glcanvas');
+  const heroWrap = document.querySelector('.hero-wrap');
 
-    // Smooth scroll from tagline word
-    document.getElementById('scrollToProjects').addEventListener('click', () => {
-      document.getElementById('projects').scrollIntoView({ behavior: 'smooth' });
+  // renderer
+  const renderer = new THREE.WebGLRenderer({canvas, antialias: true, alpha: false});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  // scene + camera
+  const scene = new THREE.Scene();
+  const camera = new THREE.OrthographicCamera(-1,1,1,-1,0,10);
+  camera.position.z = 1;
+
+  // create video element
+  const video = document.createElement('video');
+  video.src = 'assets/hero.mp4';           // <- put your video here
+  video.loop = true;
+  video.muted = true;
+  video.playsInline = true;
+  video.crossOrigin = 'anonymous';
+
+  try {
+    await video.play().catch(()=> {
+      // autoplay may be blocked: show play overlay or rely on user gesture
+      video.muted = true;
+      // try again silently
+      video.play().catch(()=>console.warn('Video autoplay blocked - user gesture required'));
     });
-  </script>
+  } catch(e){
+    console.warn('video play error', e);
+  }
 
+  // Create video texture
+  const videoTexture = new THREE.VideoTexture(video);
+  videoTexture.minFilter = THREE.LinearFilter;
+  videoTexture.magFilter = THREE.LinearFilter;
+  videoTexture.format = THREE.RGBAFormat;
+
+  // uniforms
+  const uniforms = {
+    uTexture: { value: videoTexture },
+    uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+    uPixelDensity: { value: 140.0 }, // controls dot density. Increase -> finer dots
+    uDotRadius: { value: 0.25 },     // 0..0.5 - controls dot size within each cell
+    uMouse: { value: new THREE.Vector2(0.5, 0.5) },
+    uTime: { value: 0 }
+  };
+
+  // plane
+  const geometry = new THREE.PlaneGeometry(2,2);
+
+  // simple vertex shader
+  const vertex = `
+    varying vec2 vUv;
+    void main(){ vUv = uv; gl_Position = vec4(position,1.0); }
+  `;
+
+  // fragment shader: convert video to dot matrix and apply mouse parallax
+  const fragment = `
+    precision highp float;
+    varying vec2 vUv;
+    uniform sampler2D uTexture;
+    uniform vec2 uResolution;
+    uniform float uPixelDensity;
+    uniform float uDotRadius;
+    uniform vec2 uMouse;
+    uniform float uTime;
+
+    // a subtle 2D noise function
+    float rand(vec2 co){ return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453); }
+
+    void main(){
+      vec2 uv = vUv;
+
+      // compute aspect-correct uv so the video covers nicely
+      vec2 aspect = vec2(uResolution.x/uResolution.y, 1.0);
+      vec2 centered = (uv - 0.5) * aspect + 0.5;
+
+      // apply subtle mouse-based parallax displacement
+      vec2 m = (uMouse - 0.5) * 0.35; // control strength
+      centered += vec2(m.x * (uv.y - 0.5), -m.y * (uv.x - 0.5)) * 0.35;
+
+      // pixel grid sampling
+      float density = uPixelDensity;
+      vec2 gridUV = centered * density;
+      vec2 cell = floor(gridUV);
+      vec2 cellUV = fract(gridUV) - 0.5;
+
+      // sample center of cell for color (use floor + 0.5 offset)
+      vec2 sampleUV = (cell + 0.5) / density;
+      vec4 color = texture2D(uTexture, sampleUV);
+
+      // compute dot mask based on distance from center
+      float dist = length(cellUV);
+      float mask = 1.0 - smoothstep(uDotRadius, uDotRadius + 0.02, dist);
+
+      // add subtle RGB separation for that chromatic effect
+      float sep = 1.0;
+      vec2 rUV = sampleUV + vec2(0.001, 0.0);
+      vec2 gUV = sampleUV;
+      vec2 bUV = sampleUV - vec2(0.001, 0.0);
+      vec3 col = vec3(texture2D(uTexture, rUV).r, texture2D(uTexture, gUV).g, texture2D(uTexture, bUV).b);
+
+      // modulate brightness and mask
+      col *= mask;
+
+      // optional vignette / fade near edges (keep background black)
+      float edge = smoothstep(0.0, 0.15, length(uv - 0.5));
+      col *= 1.0 - edge * 0.6;
+
+      // output
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `;
+
+  const material = new THREE.ShaderMaterial({
+    vertexShader: vertex,
+    fragmentShader: fragment,
+    uniforms: uniforms
+  });
+
+  const mesh = new THREE.Mesh(geometry, material);
+  scene.add(mesh);
+
+  // render loop
+  function onResize(){
+    const w = window.innerWidth, h = window.innerHeight;
+    renderer.setSize(w,h);
+    uniforms.uResolution.value.set(w,h);
+    // adjust pixel density for smaller screens for performance
+    uniforms.uPixelDensity.value = (w < 800) ? 80.0 : 140.0;
+  }
+  window.addEventListener('resize', onResize, {passive:true});
+  onResize();
+
+  // pointer / mouse
+  function handlePointer(e){
+    let x = e.touches ? e.touches[0].clientX : e.clientX;
+    let y = e.touches ? e.touches[0].clientY : e.clientY;
+    uniforms.uMouse.value.x = x / window.innerWidth;
+    uniforms.uMouse.value.y = 1.0 - (y / window.innerHeight);
+  }
+  window.addEventListener('pointermove', handlePointer);
+
+  let last = performance.now();
+  function animate(now){
+    const dt = (now - last)/1000;
+    last = now;
+    uniforms.uTime.value += dt;
+    // ensure video texture updates
+    if (video.readyState >= video.HAVE_CURRENT_DATA) videoTexture.needsUpdate = true;
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+
+  // mobile fallback: if WebGL not available or video fails, replace with a static background
+  if(!renderer.capabilities.isWebGL2 && !renderer.capabilities.isWebGL){
+    console.warn('WebGL not available - falling back to static hero');
+    document.getElementById('glcanvas').style.display = 'none';
+    document.body.style.background = 'black';
+  }
+
+})(); // end IIFE
+
+// ---------------------
+// Scroll reveal for projects
+// ---------------------
+(function(){
+  const items = document.querySelectorAll('.project');
+  const reveal = () => {
+    const trigger = window.innerHeight * 0.85;
+    items.forEach(el => {
+      const r = el.getBoundingClientRect();
+      if(r.top < trigger) el.classList.add('revealed');
+    });
+  };
+  window.addEventListener('scroll', reveal);
+  window.addEventListener('load', reveal);
+})();
+
+</script>
 </body>
 </html>
